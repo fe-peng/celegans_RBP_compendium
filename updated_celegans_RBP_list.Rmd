@@ -1,0 +1,419 @@
+---
+title: "updated_celegans_RBP_list"
+output: html_document
+date: "2025-03-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(ggsignif)
+library(data.table)
+library(stringr)
+```
+
+```{r}
+# Create function that is opposite of %in%
+`%out%` <- function(a,b) ! a %in% b
+```
+
+# Create updated list of putative RBP genes
+```{r}
+# Protein domain information extracted from WormBase ParaSite BioMart
+
+InterPro_domains <- read.table("WS290_20240923_InterPro_ProteinDomains.txt", sep = "\t", header = TRUE, fill = TRUE)
+
+Pfam_domains <- read.table("WS290_20240923_InterPro_ProteinDomains_with_Pfam.txt", sep = "\t", header = TRUE, fill = TRUE)
+
+PROSITE_domains <- read.table("WS290_20240923_InterPro_ProteinDomains_with_PROSITE.txt", sep = "\t", header = TRUE, fill = TRUE)
+
+SMART_domains <- read.table("WS290_20240923_InterPro_ProteinDomains_with_SMART.txt", sep = "\t", header = TRUE, fill = TRUE, quote = "")
+
+SuperFamily_domains <- read.table("WS290_20240923_InterPro_ProteinDomains_with_SuperFamily.txt", sep = "\t", header = TRUE, fill = TRUE)
+```
+
+```{r}
+Pfam_PROSITE_SMART_SuperFamily_domains_long <- rbind(Pfam_domains, PROSITE_domains, SMART_domains, SuperFamily_domains)
+
+Pfam_PROSITE_SMART_SuperFamily_domains_long <- Pfam_PROSITE_SMART_SuperFamily_domains_long[,1:2]
+
+Pfam_PROSITE_SMART_SuperFamily_domains_long <- unique(Pfam_PROSITE_SMART_SuperFamily_domains_long)
+```
+
+```{r}
+InterPro_domains_sharedInOtherResources <- merge(Pfam_PROSITE_SMART_SuperFamily_domains_long, InterPro_domains[,-1])
+```
+
+
+### Group 1 domains
+```{r}
+InterPro_domains_sharedInOtherResources_RRM <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("RNA recognition motif",InterPro.description))
+
+InterPro_domains_sharedInOtherResources_RRM <- dplyr::filter(InterPro_domains_sharedInOtherResources_RRM, grepl("RRM",InterPro.short.description))
+```
+
+```{r}
+InterPro_domains_sharedInOtherResources_KH <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("K Homology",InterPro.description))
+
+InterPro_domains_sharedInOtherResources_KH <- dplyr::filter(InterPro_domains_sharedInOtherResources_KH, grepl("KH",InterPro.short.description))
+```
+
+```{r}
+puf_temp1 <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("Pumilio",InterPro.description))
+
+puf_temp2 <- dplyr::filter(puf_temp1, grepl("Pumilio",InterPro.short.description))
+puf_temp3 <- dplyr::filter(puf_temp1, grepl("PUM",InterPro.short.description))
+
+InterPro_domains_sharedInOtherResources_PUF <- rbind(puf_temp2, puf_temp3)
+```
+
+```{r}
+InterPro_domains_sharedInOtherResources_CCCH <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("CCCH",InterPro.description))
+
+InterPro_domains_sharedInOtherResources_CCCH <- dplyr::filter(InterPro_domains_sharedInOtherResources_CCCH, grepl("CCCH",InterPro.short.description))
+```
+
+```{r}
+InterPro_domains_sharedInOtherResources_CCHC <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("CCHC",InterPro.description))
+
+InterPro_domains_sharedInOtherResources_CCHC <- dplyr::filter(InterPro_domains_sharedInOtherResources_CCHC, grepl("CCHC",InterPro.short.description))
+
+InterPro_domains_sharedInOtherResources_CCHC <- dplyr::filter(InterPro_domains_sharedInOtherResources_CCHC, !grepl("Mlase",InterPro.short.description))
+```
+
+```{r}
+InterPro_domains_sharedInOtherResources_DSRBD <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("Double-stranded RNA-binding",InterPro.description))
+
+InterPro_domains_sharedInOtherResources_DSRBD <- dplyr::filter(InterPro_domains_sharedInOtherResources_DSRBD, grepl("dsRBD",InterPro.short.description))
+```
+
+```{r}
+la_temp1 <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("La domain",InterPro.description))
+la_temp2 <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("La-type",InterPro.description))
+la_temp3 <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("La protein",InterPro.description))
+
+
+InterPro_domains_sharedInOtherResources_la <- rbind(la_temp1, la_temp2, la_temp3)
+InterPro_domains_sharedInOtherResources_la <- dplyr::filter(InterPro_domains_sharedInOtherResources_la, !grepl("Lupus",InterPro.description))
+InterPro_domains_sharedInOtherResources_la <- dplyr::filter(InterPro_domains_sharedInOtherResources_la, !grepl("Tetra",InterPro.short.description))
+```
+
+```{r}
+unique_putative_group1_RBPs <- rbind(InterPro_domains_sharedInOtherResources_RRM, InterPro_domains_sharedInOtherResources_KH, InterPro_domains_sharedInOtherResources_PUF, InterPro_domains_sharedInOtherResources_CCCH, InterPro_domains_sharedInOtherResources_CCHC, InterPro_domains_sharedInOtherResources_DSRBD, InterPro_domains_sharedInOtherResources_la)
+
+unique_putative_group1_RBPs <- unique_putative_group1_RBPs[,1:2]
+unique_putative_group1_RBPs <- unique(unique_putative_group1_RBPs)
+```
+
+```{r}
+names(unique_putative_group1_RBPs)[names(unique_putative_group1_RBPs) == 'Gene.stable.ID'] <- 'WB_ID'
+```
+
+
+### Group 2 domains
+```{r}
+InterPro_domains_sharedInOtherResources_HEL <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("RNA helicase",InterPro.description))
+
+InterPro_domains_sharedInOtherResources_HEL <- dplyr::filter(InterPro_domains_sharedInOtherResources_HEL, grepl("helicase",InterPro.short.description))
+```
+
+```{r}
+Piwi_temp <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("Piwi",InterPro.description))
+PIWI_temp <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("PIWI",InterPro.description))
+
+Piwi_PIWI_temp <- rbind(Piwi_temp, PIWI_temp)
+
+InterPro_domains_sharedInOtherResources_PIWI <- dplyr::filter(Piwi_PIWI_temp, grepl("Piwi",InterPro.short.description))
+
+InterPro_domains_sharedInOtherResources_PAZ <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("PAZ domain",InterPro.description))
+
+InterPro_domains_sharedInOtherResources_PAZ <- dplyr::filter(InterPro_domains_sharedInOtherResources_PAZ, grepl("PAZ",InterPro.short.description))
+
+InterPro_domains_sharedInOtherResources_ARGO <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("Argo",InterPro.short.description))
+
+InterPro_domains_sharedInOtherResources_ARGO <- dplyr::filter(InterPro_domains_sharedInOtherResources_ARGO, grepl("rgonaute",InterPro.description))
+
+InterPro_domains_sharedInOtherResources_PAZ_PIWI_ARGO <- rbind(InterPro_domains_sharedInOtherResources_PIWI, InterPro_domains_sharedInOtherResources_PAZ, InterPro_domains_sharedInOtherResources_ARGO)
+```
+
+```{r}
+InterPro_domains_sharedInOtherResources_NTF2 <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("NTF2",InterPro.short.description))
+```
+
+```{r}
+unique_putative_group2_RBPs <- rbind(InterPro_domains_sharedInOtherResources_HEL, InterPro_domains_sharedInOtherResources_PAZ_PIWI_ARGO, InterPro_domains_sharedInOtherResources_NTF2)
+
+unique_putative_group2_RBPs <- unique_putative_group2_RBPs[,1:2]
+unique_putative_group2_RBPs <- unique(unique_putative_group2_RBPs)
+```
+
+```{r}
+names(unique_putative_group2_RBPs)[names(unique_putative_group2_RBPs) == 'Gene.stable.ID'] <- 'WB_ID'
+```
+
+
+### Group 3 domains
+```{r}
+InterPro_domains_sharedInOtherResources_C2H2 <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("C2H2",InterPro.description))
+
+InterPro_domains_sharedInOtherResources_C2H2 <- dplyr::filter(InterPro_domains_sharedInOtherResources_C2H2, grepl("C2H2",InterPro.short.description))
+```
+
+```{r}
+SAM_temp1 <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("SAM domain",InterPro.description))
+
+Sam_temp2 <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("Sterile alpha motif",InterPro.description))
+
+SAM_Sam_temp <- rbind(SAM_temp1, Sam_temp2)
+
+InterPro_domains_sharedInOtherResources_SAM <- dplyr::filter(SAM_Sam_temp, grepl("SAM",InterPro.short.description))
+```
+
+```{r}
+Cold_temp1 <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("Cold",InterPro.description))
+
+cold_temp2 <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("cold",InterPro.description))
+
+Cold_cold_temp <- rbind(Cold_temp1, cold_temp2)
+```
+
+```{r}
+InterPro_domains_sharedInOtherResources_CSD <- dplyr::filter(Cold_cold_temp, grepl("CSD",InterPro.short.description))
+```
+
+```{r}
+unique_putative_group3_RBPs <- rbind(InterPro_domains_sharedInOtherResources_C2H2, InterPro_domains_sharedInOtherResources_SAM, InterPro_domains_sharedInOtherResources_CSD)
+
+unique_putative_group3_RBPs <- unique_putative_group3_RBPs[,1:2]
+unique_putative_group3_RBPs <- unique(unique_putative_group3_RBPs)
+```
+
+```{r}
+names(unique_putative_group3_RBPs)[names(unique_putative_group3_RBPs) == 'Gene.stable.ID'] <- 'WB_ID'
+```
+
+
+### Group 4 domains
+```{r}
+Sm_domain_temp <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("Sm domain",InterPro.description))
+
+Sm_like_temp <- dplyr::filter(InterPro_domains_sharedInOtherResources, grepl("Sm-like",InterPro.short.description))
+
+Sm_domain_like_temp <- rbind(Sm_domain_temp, Sm_like_temp)
+
+InterPro_domains_sharedInOtherResources_Sm <- dplyr::filter(Sm_domain_like_temp, grepl("Sm",InterPro.short.description))
+```
+
+```{r}
+unique_putative_group4_RBPs <- InterPro_domains_sharedInOtherResources_Sm[,1:2]
+unique_putative_group4_RBPs <- unique(unique_putative_group4_RBPs)
+```
+
+```{r}
+names(unique_putative_group4_RBPs)[names(unique_putative_group4_RBPs) == 'Gene.stable.ID'] <- 'WB_ID'
+```
+
+
+### Group 1 RBPs from 2013 Walhout
+```{r}
+allWBgeneIDs <- read.table("allWBgeneIDs_20240923_WS290.txt", sep = "\t", header = TRUE)
+allWBgeneIDs <- allWBgeneIDs[,2:3]
+
+names(allWBgeneIDs)[names(allWBgeneIDs) == 'Gene.stable.ID'] <- 'WB_ID'
+names(allWBgeneIDs)[names(allWBgeneIDs) == 'Gene.name'] <- 'gene'
+```
+
+```{r}
+walhout_putative_RBPs_temp <- read.csv(file = '/Users/feli/Desktop/RBP/RBPlist.csv')
+walhout_putative_RBPs_temp <- walhout_putative_RBPs_temp[,-1]
+names(walhout_putative_RBPs_temp)[names(walhout_putative_RBPs_temp) == 'gene.id'] <- 'WB_ID'
+```
+
+```{r}
+# Dead genes need to get WB_ID replaced, remove transposons in origin
+# WBGene00011199 --> WBGene00006331
+# WBGene00007706 --> WBGene00045383
+# WBGene00016723 --> Transposon in origin
+# WBGene00022525 --> WBGene00022524
+# WBGene00021924 --> WBGene00002278
+# WBGene00021759 --> WBGene00021752
+# WBGene00019752 --> WBGene00019176
+# WBGene00015274 --> WBGene00006342
+# WBGene00020848 --> WBGene00003933
+# WBGene00022387 --> WBGene00022388
+# WBGene00021688 --> WBGene00021689
+# WBGene00016348 --> Transposon in origin
+# WBGene00012506 --> Transposin in origin
+# WBGene00019876 --> WBGene00019884
+
+walhout_putative_RBPs <- walhout_putative_RBPs_temp %>%
+  mutate(across('WB_ID', str_replace, 'WBGene00011199', 'WBGene00006331'))
+
+walhout_putative_RBPs <- walhout_putative_RBPs %>%
+  mutate(across('WB_ID', str_replace, 'WBGene00007706', 'WBGene00045383'))
+
+walhout_putative_RBPs <- walhout_putative_RBPs %>%
+  mutate(across('WB_ID', str_replace, 'WBGene00022525', 'WBGene00022524'))
+
+walhout_putative_RBPs <- walhout_putative_RBPs %>%
+  mutate(across('WB_ID', str_replace, 'WBGene00021924', 'WBGene00002278'))
+
+walhout_putative_RBPs <- walhout_putative_RBPs %>%
+  mutate(across('WB_ID', str_replace, 'WBGene00021759', 'WBGene00021752'))
+
+walhout_putative_RBPs <- walhout_putative_RBPs %>%
+  mutate(across('WB_ID', str_replace, 'WBGene00019752', 'WBGene00019176'))
+
+walhout_putative_RBPs <- walhout_putative_RBPs %>%
+  mutate(across('WB_ID', str_replace, 'WBGene00015274', 'WBGene00006342'))
+
+walhout_putative_RBPs <- walhout_putative_RBPs %>%
+  mutate(across('WB_ID', str_replace, 'WBGene00020848', 'WBGene00003933'))
+
+walhout_putative_RBPs <- walhout_putative_RBPs %>%
+  mutate(across('WB_ID', str_replace, 'WBGene00022387', 'WBGene00022388'))
+
+walhout_putative_RBPs <- walhout_putative_RBPs %>%
+  mutate(across('WB_ID', str_replace, 'WBGene00021688', 'WBGene00021689'))
+
+walhout_putative_RBPs <- walhout_putative_RBPs %>%
+  mutate(across('WB_ID', str_replace, 'WBGene00019876', 'WBGene00019884'))
+```
+
+```{r}
+# Duplicates: WBGene00021689, WBGene00021752
+walhout_putative_RBPs_noDuplicates <- merge(allWBgeneIDs, walhout_putative_RBPs, by = "WB_ID")
+
+# Remove ORF from dead gene
+walhout_putative_RBPs_noDuplicates <- walhout_putative_RBPs_noDuplicates[!grepl("Y48G8AL.9", walhout_putative_RBPs_noDuplicates$ORF),]
+
+# Remove ORF from dead gene
+walhout_putative_RBPs_noDuplicates <- walhout_putative_RBPs_noDuplicates[!grepl("Y50D7A.11", walhout_putative_RBPs_noDuplicates$ORF),]
+```
+
+```{r}
+walhout_putative_RBPs_group1 <- subset(walhout_putative_RBPs_noDuplicates, Group == "1")
+```
+
+```{r}
+potentially_new_group1_RBPs <- subset(unique_putative_group1_RBPs, WB_ID %out% walhout_putative_RBPs_noDuplicates$WB_ID)
+
+potentially_new_group1_RBPs <- merge(allWBgeneIDs, potentially_new_group1_RBPs, by = "WB_ID")
+```
+
+
+### Group 2 RBPs from 2013 Walhout
+```{r}
+walhout_putative_RBPs_group2 <- subset(walhout_putative_RBPs_noDuplicates, Group == "2")
+```
+
+```{r}
+potentially_new_group2_RBPs <- subset(unique_putative_group2_RBPs, WB_ID %out% walhout_putative_RBPs_noDuplicates$WB_ID)
+
+potentially_new_group2_RBPs <- merge(allWBgeneIDs, potentially_new_group2_RBPs, by = "WB_ID")
+```
+
+
+### Group 3 RBPs from 2013 Walhout
+```{r}
+walhout_putative_RBPs_group3 <- subset(walhout_putative_RBPs_noDuplicates, Group == "3")
+```
+
+```{r}
+potentially_new_group3_RBPs <- subset(unique_putative_group3_RBPs, WB_ID %out% walhout_putative_RBPs_noDuplicates$WB_ID)
+
+potentially_new_group3_RBPs <- merge(allWBgeneIDs, potentially_new_group3_RBPs, by = "WB_ID")
+```
+
+
+### Group 4 RBPs from 2013 Walhout
+```{r}
+walhout_putative_RBPs_group4 <- subset(walhout_putative_RBPs_noDuplicates, Group == "4")
+```
+
+```{r}
+potentially_new_group4_RBPs <- subset(unique_putative_group4_RBPs, WB_ID %out% walhout_putative_RBPs_noDuplicates$WB_ID)
+
+potentially_new_group4_RBPs <- merge(allWBgeneIDs, potentially_new_group4_RBPs, by = "WB_ID")
+```
+
+
+### Create long format df of potentially new RBPs
+```{r}
+potentially_new_group1_RBPs$Group <- '1'
+potentially_new_group2_RBPs$Group <- '2'
+potentially_new_group3_RBPs$Group <- '3'
+potentially_new_group4_RBPs$Group <- '4'
+
+potentially_new_RBPs <- rbind(potentially_new_group1_RBPs, potentially_new_group2_RBPs, potentially_new_group3_RBPs, potentially_new_group4_RBPs)
+```
+
+
+### Combine old and new RBPs
+```{r}
+walhout_putative_RBPs_noDuplicates_condensed <- walhout_putative_RBPs_noDuplicates[,c("WB_ID", "gene", "Group")]
+potentially_new_RBPs_condensed <- potentially_new_RBPs[,c("WB_ID", "gene", "Group")]
+```
+
+```{r}
+updated_RBP_df <- rbind(walhout_putative_RBPs_noDuplicates_condensed, potentially_new_RBPs_condensed)
+```
+
+
+# Create gene categories for downstream comparative analyses
+```{r}
+protein_coding_genes <- read.table("protein_coding_genes_20240923_WS290.txt", sep = "\t", header = TRUE)
+
+protein_coding_genes <- protein_coding_genes[,2:3]
+names(protein_coding_genes)[names(protein_coding_genes) == 'Gene.stable.ID'] <- 'WB_ID'
+names(protein_coding_genes)[names(protein_coding_genes) == 'Gene.name'] <- 'gene'
+```
+
+```{r}
+# Import lives of putative TFs from most updated Walhout compendium...
+putative_TF <- read.csv(file = 'walhout_wTF3.0.csv')
+putative_TF <- unique(putative_TF)
+
+# Mutually exclusive TFs
+putative_TF_no_group1234_RBP <- subset(putative_TF, WB_ID %out% updated_RBP_df$WB_ID)
+```
+
+```{r}
+updated_group1_RBPs <- subset(updated_RBP_df, Group == "1")
+```
+
+```{r}
+ambiguous_group1_RBP_TF <- merge(updated_group1_RBPs[,-2], putative_TF, by = "WB_ID")
+
+ambiguous_group1_RBP_TF <- merge(ambiguous_group1_RBP_TF[,-2], walhout_putative_RBPs, by = "WB_ID")
+
+ambiguous_group1_RBP_TF_ZFCCCH <- dplyr::filter(ambiguous_group1_RBP_TF, grepl("CCCH",RBD))
+```
+
+```{r}
+# Mutually exclusive group 1 RBPs + those with ZF CCCH domain...
+updated_group1_RBPs_noTFs <- subset(updated_group1_RBPs, WB_ID %out% putative_TF$WB_ID | WB_ID %in% ambiguous_group1_RBP_TF_ZFCCCH$WB_ID)
+```
+
+```{r}
+proteinCoding_noTF_noRBP <- subset(protein_coding_genes, WB_ID %out% updated_RBP_df$WB_ID)
+proteinCoding_noTF_noRBP <- subset(proteinCoding_noTF_noRBP, WB_ID %out% putative_TF$WB_ID)
+```
+
+```{r}
+# Mutually exclusive group 2 RBPs
+updated_group2_RBPs <- subset(updated_RBP_df, Group == "2")
+updated_group2_RBPs_noTFs <- subset(updated_group2_RBPs, WB_ID %out% putative_TF$WB_ID)
+
+# Group 3 RBPs include putative TFs as well
+updated_group3_RBPs <- subset(updated_RBP_df, Group == "3")
+
+# Mutually exclusive group 4 RBPs
+updated_group4_RBPs <- subset(updated_RBP_df, Group == "4")
+updated_group4_RBPs_noTFs <- subset(updated_group4_RBPs, WB_ID %out% putative_TF$WB_ID)
+```
+
