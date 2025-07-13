@@ -1,0 +1,363 @@
+---
+title: "boeck_embryoLarvalExpression_RBP_TF"
+output: html_document
+date: "2025-07-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(data.table)
+```
+
+```{r}
+# Create function that is opposite of %in%
+`%out%` <- function(a,b) ! a %in% b
+```
+
+```{r}
+updated_group1234_RBPs_TFs_long <- read.table("updated_group1234_RBPs_TFs_long_group3withTF_WS290.txt", sep = "\t", header = TRUE)
+```
+
+```{r}
+boeck_allStages_unified <- read.table(file = 'boeck_suppTable13.txt', sep = '', header = TRUE)
+```
+
+```{r}
+boeck_larval_unified <- boeck_allStages_unified[,1:24]
+names(boeck_larval_unified)[names(boeck_larval_unified) == 'WormbaseName'] <- 'sequence_name'
+```
+
+```{r}
+allWBID_sequenceName <- read.csv(file = 'allWBID_sequenceName_20250116.csv')
+
+# Rename columns
+names(allWBID_sequenceName)[names(allWBID_sequenceName) == 'Public.Name'] <- 'gene'
+names(allWBID_sequenceName)[names(allWBID_sequenceName) == 'Your.Input'] <- 'WB_ID'
+names(allWBID_sequenceName)[names(allWBID_sequenceName) == 'Sequence.Name'] <- 'sequence_name'
+```
+
+```{r}
+boeck_larval_unified_WBID <- merge(allWBID_sequenceName, boeck_larval_unified, by = "sequence_name")
+```
+
+
+### Make heatmaps...
+```{r}
+library(gplots)
+```
+
+```{r}
+boeck_larval_unified_WBID_forHeatmap <- boeck_larval_unified_WBID
+boeck_larval_unified_WBID_forHeatmap <- boeck_larval_unified_WBID_forHeatmap[,c(2,4:26)]
+
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X4cell'] <- '4cell'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X44min'] <- '44min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X83min'] <- '83min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X122min'] <- '122min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X161min'] <- '161min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X199min'] <- '199min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X238min'] <- '238min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X277min'] <- '277min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X316min'] <- '316min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X355min'] <- '355min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X393min'] <- '393min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X432min'] <- '432min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X471min'] <- '471min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X510min'] <- '510min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X548min'] <- '548min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X587min'] <- '587min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X626min'] <- '626min'
+names(boeck_larval_unified_WBID_forHeatmap)[names(boeck_larval_unified_WBID_forHeatmap) == 'X665min'] <- '665min'
+```
+
+```{r}
+# Reshape into long format
+boeck_larval_unified_WBID_forHeatmap_long <- gather(boeck_larval_unified_WBID_forHeatmap, timept, dcpm, 2:24)
+
+boeck_larval_unified_WBID_forHeatmap_maxExp <- boeck_larval_unified_WBID_forHeatmap_long %>%
+    group_by(WB_ID) %>%
+    dplyr::slice(which.max(dcpm))
+```
+
+```{r}
+updated_group1234_RBPs_TFs_long <- read.table("updated_group1234_RBPs_TFs_long_group3withTF_WS290.txt", sep = "\t", header = TRUE)
+
+protein_coding_genes <- read.table("protein_coding_genes_20240923_WS290.txt", sep = "\t", header = TRUE)
+
+protein_coding_genes <- protein_coding_genes[,2:3]
+names(protein_coding_genes)[names(protein_coding_genes) == 'Gene.stable.ID'] <- 'WB_ID'
+names(protein_coding_genes)[names(protein_coding_genes) == 'Gene.name'] <- 'gene'
+
+protein_coding_genes$Group <- 'all_protein_coding'
+
+updated_group1234_RBPs_TFs_proteinCoding_long <- rbind(updated_group1234_RBPs_TFs_long, protein_coding_genes)
+```
+
+##### Heat map for group 1 RBPs
+```{r}
+group1_temp <- subset(updated_group1234_RBPs_TFs_proteinCoding_long, Group == "1")
+
+group1_boeck_larval_unified_WBID_forHeatmap <- subset(boeck_larval_unified_WBID_forHeatmap, WB_ID %in% group1_temp$WB_ID)
+```
+
+```{r}
+group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- group1_boeck_larval_unified_WBID_forHeatmap
+group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 %>%
+    remove_rownames %>% column_to_rownames(var = "WB_ID")
+
+group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- log2(group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 + 1)
+
+group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2$mean <- rowMeans(group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2)
+
+group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2[,1:23] - group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2$mean
+
+group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- setDT(group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered, keep.rownames = "WB_ID")
+```
+
+```{r}
+keep1.1 <- apply(group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered[ , 2:24], 1, function(x) length(unique(x[!is.na(x)])) != 1)
+
+group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered[keep1.1,]
+```
+
+```{r}
+# make first column into row names...
+group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered %>% remove_rownames %>% column_to_rownames(var="WB_ID")
+
+# turn into matrix for clustering...
+group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix <- data.matrix(group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered, rownames.force =  TRUE)
+```
+
+```{r}
+clustRows1.1 <- hclust(as.dist(1 - cor(t(group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix), method = "pearson")), method = "complete")
+```
+
+```{r}
+Colors_deepSkyBlue = colorRampPalette(c("deepskyblue", "black", "yellow"))(n=300)
+```
+
+```{r}
+heatmap.2(group1_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix, dendrogram = "row", Rowv = as.dendrogram(clustRows1.1), Colv = NA, symbreaks = FALSE, col = Colors_deepSkyBlue, scale = "none", density.info = "none", trace = "none", cexRow=1,cexCol=1,margins=c(8,8), breaks = seq(-2,2,length.out=301))
+```
+
+##### Heat map for group 2 RBPs
+```{r}
+group2_temp <- subset(updated_group1234_RBPs_TFs_proteinCoding_long, Group == "2")
+
+group2_boeck_larval_unified_WBID_forHeatmap <- subset(boeck_larval_unified_WBID_forHeatmap, WB_ID %in% group2_temp$WB_ID)
+```
+
+```{r}
+group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- group2_boeck_larval_unified_WBID_forHeatmap
+group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 %>%
+    remove_rownames %>% column_to_rownames(var = "WB_ID")
+
+group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- log2(group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 + 1)
+
+group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2$mean <- rowMeans(group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2)
+
+group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2[,1:23] - group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2$mean
+
+group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- setDT(group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered, keep.rownames = "WB_ID")
+```
+
+```{r}
+keep1.2 <- apply(group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered[ , 2:24], 1, function(x) length(unique(x[!is.na(x)])) != 1)
+
+group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered[keep1.2,]
+```
+
+```{r}
+# make first column into row names...
+group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered %>% remove_rownames %>% column_to_rownames(var="WB_ID")
+
+# turn into matrix for clustering...
+group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix <- data.matrix(group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered, rownames.force =  TRUE)
+```
+
+```{r}
+clustRows1.2 <- hclust(as.dist(1 - cor(t(group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix), method = "pearson")), method = "complete")
+```
+
+```{r}
+heatmap.2(group2_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix, dendrogram = "row", Rowv = as.dendrogram(clustRows1.2), Colv = NA, symbreaks = FALSE, col = Colors_deepSkyBlue, scale = "none", density.info = "none", trace = "none", cexRow=1,cexCol=1,margins=c(4,1), labRow = FALSE, breaks = seq(-2,2,length.out=301))
+```
+
+##### Heat map for group 3 RBPs
+```{r}
+group3_temp <- subset(updated_group1234_RBPs_TFs_proteinCoding_long, Group == "3")
+
+group3_boeck_larval_unified_WBID_forHeatmap <- subset(boeck_larval_unified_WBID_forHeatmap, WB_ID %in% group3_temp$WB_ID)
+```
+
+```{r}
+group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- group3_boeck_larval_unified_WBID_forHeatmap
+group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 %>%
+    remove_rownames %>% column_to_rownames(var = "WB_ID")
+
+group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- log2(group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 + 1)
+
+group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2$mean <- rowMeans(group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2)
+
+group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2[,1:23] - group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2$mean
+
+group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- setDT(group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered, keep.rownames = "WB_ID")
+```
+
+```{r}
+keep1.3 <- apply(group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered[ , 2:24], 1, function(x) length(unique(x[!is.na(x)])) != 1)
+
+group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered[keep1.3,]
+```
+
+```{r}
+# make first column into row names...
+group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered %>% remove_rownames %>% column_to_rownames(var="WB_ID")
+
+# turn into matrix for clustering...
+group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix <- data.matrix(group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered, rownames.force =  TRUE)
+```
+
+```{r}
+clustRows1.3 <- hclust(as.dist(1 - cor(t(group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix), method = "pearson")), method = "complete")
+```
+
+```{r}
+heatmap.2(group3_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix, dendrogram = "row", Rowv = as.dendrogram(clustRows1.3), Colv = NA, symbreaks = FALSE, col = Colors_deepSkyBlue, scale = "none", density.info = "none", trace = "none", cexRow=1,cexCol=1,margins=c(4,1), labRow = FALSE, breaks = seq(-2,2,length.out=301))
+```
+
+##### Heat map for group 4 RBPs
+```{r}
+group4_temp <- subset(updated_group1234_RBPs_TFs_proteinCoding_long, Group == "4")
+
+group4_boeck_larval_unified_WBID_forHeatmap <- subset(boeck_larval_unified_WBID_forHeatmap, WB_ID %in% group4_temp$WB_ID)
+```
+
+```{r}
+group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- group4_boeck_larval_unified_WBID_forHeatmap
+group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 %>%
+    remove_rownames %>% column_to_rownames(var = "WB_ID")
+
+group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- log2(group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 + 1)
+
+group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2$mean <- rowMeans(group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2)
+
+group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2[,1:23] - group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2$mean
+
+group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- setDT(group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered, keep.rownames = "WB_ID")
+```
+
+```{r}
+keep1.4 <- apply(group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered[ , 2:24], 1, function(x) length(unique(x[!is.na(x)])) != 1)
+
+group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered[keep1.4,]
+```
+
+```{r}
+# make first column into row names...
+group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered %>% remove_rownames %>% column_to_rownames(var="WB_ID")
+
+# turn into matrix for clustering...
+group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix <- data.matrix(group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered, rownames.force =  TRUE)
+```
+
+```{r}
+clustRows1.4 <- hclust(as.dist(1 - cor(t(group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix), method = "pearson")), method = "complete")
+```
+
+```{r}
+heatmap.2(group4_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix, dendrogram = "row", Rowv = as.dendrogram(clustRows1.4), Colv = NA, symbreaks = FALSE, col = Colors_deepSkyBlue, scale = "none", density.info = "none", trace = "none", cexRow=1,cexCol=1,margins=c(4,1), labRow = FALSE, breaks = seq(-2,2,length.out=301))
+```
+
+##### Heat map for TFs
+```{r}
+TF_temp <- subset(updated_group1234_RBPs_TFs_proteinCoding_long, Group == "TF")
+
+TF_boeck_larval_unified_WBID_forHeatmap <- subset(boeck_larval_unified_WBID_forHeatmap, WB_ID %in% TF_temp$WB_ID)
+```
+
+```{r}
+TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- TF_boeck_larval_unified_WBID_forHeatmap
+TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 %>%
+    remove_rownames %>% column_to_rownames(var = "WB_ID")
+
+TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- log2(TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 + 1)
+
+TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2$mean <- rowMeans(TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2)
+
+TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2[,1:23] - TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2$mean
+
+TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- setDT(TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered, keep.rownames = "WB_ID")
+```
+
+```{r}
+keep1.5 <- apply(TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered[ , 2:24], 1, function(x) length(unique(x[!is.na(x)])) != 1)
+
+TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered[keep1.5,]
+```
+
+```{r}
+# make first column into row names...
+TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered %>% remove_rownames %>% column_to_rownames(var="WB_ID")
+
+# turn into matrix for clustering...
+TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix <- data.matrix(TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered, rownames.force =  TRUE)
+```
+
+```{r}
+clustRows1.5 <- hclust(as.dist(1 - cor(t(TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix), method = "pearson")), method = "complete")
+```
+
+```{r}
+heatmap.2(TF_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix, dendrogram = "row", Rowv = as.dendrogram(clustRows1.5), Colv = NA, symbreaks = FALSE, col = Colors_deepSkyBlue, scale = "none", density.info = "none", trace = "none", cexRow=1,cexCol=1,margins=c(4,1), labRow = NULL, breaks = seq(-2,2,length.out=301))
+```
+
+##### Heat map for all protein-coding genes
+```{r}
+protein_coding_temp <- subset(updated_group1234_RBPs_TFs_proteinCoding_long, Group == "all_protein_coding")
+
+protein_coding_boeck_larval_unified_WBID_forHeatmap <- subset(boeck_larval_unified_WBID_forHeatmap, WB_ID %in% protein_coding_temp$WB_ID)
+
+protein_coding_boeck_larval_unified_WBID_forHeatmap <- protein_coding_boeck_larval_unified_WBID_forHeatmap %>% drop_na()
+```
+
+```{r}
+protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- protein_coding_boeck_larval_unified_WBID_forHeatmap
+protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 %>%
+    remove_rownames %>% column_to_rownames(var = "WB_ID")
+
+protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 <- log2(protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2 + 1)
+
+protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2$mean <- rowMeans(protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2)
+
+protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2[,1:23] - protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2$mean
+
+protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- setDT(protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered, keep.rownames = "WB_ID")
+```
+
+```{r}
+keep1.6 <- apply(protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered[ , 2:24], 1, function(x) length(unique(x[!is.na(x)])) != 1)
+
+protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered[keep1.6,]
+```
+
+```{r}
+# make first column into row names...
+protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered <- protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered %>% remove_rownames %>% column_to_rownames(var="WB_ID")
+
+# turn into matrix for clustering...
+protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix <- data.matrix(protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered, rownames.force =  TRUE)
+```
+
+```{r}
+clustRows1.6 <- hclust(as.dist(1 - cor(t(protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix), method = "pearson")), method = "complete")
+```
+
+```{r}
+heatmap.2(protein_coding_boeck_larval_unified_WBID_forHeatmap_pseudocount_log2_centered.matrix, dendrogram = "row", Rowv = as.dendrogram(clustRows1.6), Colv = NA, symbreaks = FALSE, col = Colors_deepSkyBlue, scale = "none", density.info = "none", trace = "none", cexRow=1,cexCol=1,margins=c(4,1), labRow = NULL, breaks = seq(-2,2,length.out=301))
+```
+
