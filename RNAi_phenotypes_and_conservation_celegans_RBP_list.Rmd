@@ -1,0 +1,567 @@
+---
+title: "RNAi_phenotypes_and_conservation_celegans_RBP_list"
+output: html_document
+date: "2025-04-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(ggsignif)
+library(data.table)
+library(stringr)
+```
+
+### RNAi phenotypes from WormBase
+```{r}
+simplemine <- read.csv(file = 'celegans_simplemine_RNAi_allele_phenotypes_20241213.csv')
+
+names(simplemine)[names(simplemine) == 'Public.Name'] <- 'gene'
+names(simplemine)[names(simplemine) == 'WormBase.Gene.ID'] <- 'WB_ID'
+```
+
+```{r}
+simplemine_emb_lethal_tmp1 <- dplyr::filter(simplemine, grepl("embryonic lethal",RNAi.Phenotype.Observed))
+simplemine_emb_lethal_tmp2 <- dplyr::filter(simplemine, grepl("embryonic arrest",RNAi.Phenotype.Observed))
+
+simplemine_emb_lethal <- rbind(simplemine_emb_lethal_tmp1, simplemine_emb_lethal_tmp2)
+simplemine_emb_lethal <- unique(simplemine_emb_lethal)
+```
+
+```{r}
+simplemine_larval_lethal_tmp1 <- dplyr::filter(simplemine, grepl("larval lethal",RNAi.Phenotype.Observed))
+simplemine_larval_lethal_tmp2 <- dplyr::filter(simplemine, grepl("larval arrest",RNAi.Phenotype.Observed))
+
+simplemine_larval_lethal <- rbind(simplemine_larval_lethal_tmp1, simplemine_larval_lethal_tmp2)
+simplemine_larval_lethal <- unique(simplemine_larval_lethal)
+```
+
+```{r}
+# What prop embryonic lethal...
+
+# 112/251 group 1
+subset(updated_group1_RBPs_noTFs, WB_ID %in% simplemine_emb_lethal$WB_ID)
+
+# 48/135 group 2
+subset(updated_group2_RBPs_noTFs, WB_ID %in% simplemine_emb_lethal$WB_ID)
+
+# 50/257 group 3
+subset(updated_group3_RBPs, WB_ID %in% simplemine_emb_lethal$WB_ID)
+
+# 192/278 group 4
+subset(updated_group4_RBPs_noTFs, WB_ID %in% simplemine_emb_lethal$WB_ID)
+
+# 130/700 TF
+subset(putative_TF_no_group1234_RBP, WB_ID %in% simplemine_emb_lethal$WB_ID)
+
+# 2975/19984 group 1
+subset(protein_coding_genes, WB_ID %in% simplemine_emb_lethal$WB_ID)
+```
+
+```{r}
+# TF
+chisq.test(x=c(130,(700-130)), p=c(0.14886909527,0.85113090472))
+
+# group 1
+chisq.test(x=c(112,(251-112)), p=c(0.14886909527,0.85113090472))
+
+# group 2
+chisq.test(x=c(48,(135-48)), p=c(0.14886909527,0.85113090472))
+
+# group 3
+chisq.test(x=c(50,(257-50)), p=c(0.14886909527,0.85113090472))
+
+# group 4
+chisq.test(x=c(192,(278-192)), p=c(0.14886909527,0.85113090472))
+```
+
+```{r}
+# What prop larval lethal...
+
+# 62/251 group 1
+subset(updated_group1_RBPs_noTFs, WB_ID %in% simplemine_larval_lethal$WB_ID)
+
+# 41/135 group 2
+subset(updated_group2_RBPs_noTFs, WB_ID %in% simplemine_larval_lethal$WB_ID)
+
+# 46/257 group 3
+subset(updated_group3_RBPs, WB_ID %in% simplemine_larval_lethal$WB_ID)
+
+# 175/278 group 4
+subset(updated_group4_RBPs_noTFs, WB_ID %in% simplemine_larval_lethal$WB_ID)
+
+# 85/700 TF
+subset(putative_TF_no_group1234_RBP, WB_ID %in% simplemine_larval_lethal$WB_ID)
+
+# 1899/19984 group 1
+subset(protein_coding_genes, WB_ID %in% simplemine_larval_lethal$WB_ID)
+```
+
+```{r}
+# TF
+chisq.test(x=c(85,(700-85)), p=c(0.09502602081,0.90497397918))
+
+# group 1
+chisq.test(x=c(62,(251-62)), p=c(0.09502602081,0.90497397918))
+
+# group 2
+chisq.test(x=c(41,(135-41)), p=c(0.09502602081,0.90497397918))
+
+# group 3
+chisq.test(x=c(46,(257-46)), p=c(0.09502602081,0.90497397918))
+
+# group 4
+chisq.test(x=c(175,(278-175)), p=c(0.09502602081,0.90497397918))
+```
+
+
+### RNAi phenotypes from 2022 Xiao et al.
+```{r}
+xiao_ts3 <- read.csv(file = '2022_Xiao_TableS3.csv')
+xiao_ts3_lineaged_genes <- subset(xiao_ts3, Treatment == "lineaging and cell lineage tracing")
+```
+
+```{r}
+xiao_ts4 <- read.csv(file = '2022_Xiao_Table_S4_modified.csv')
+
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'acox-1', 'acox-1.1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'B0205.6', 'nfs-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'C10H11.8', 'mlst-8'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'C18E3.5', 'snrp-40.2'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'C27A12.7', 'ari-1.2'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'C34B2.10', 'spcs-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'C50F2.3', 'syf-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'cco-1', 'cox-5B'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'D1081.9', 'zhp-2'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'E01A2.5', 'dph-6'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'F26B1.2', 'hrpk-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'F43G9.12', 'mog-7'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'F54D7.2', 'ept-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'F55A3.3', 'spt-16'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'F57B10.5', 'tmed-3'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'F57B10.9', 'spg-20'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'hpo-3', 'gpaa-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'hrp-2', 'hrpr-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'inst-1', 'ints-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'K07A12.4', 'hbs-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'K11B4.2', 'blos-9'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'K11D2.5', 'mter-4'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'M01A10.1', 'fubl-4'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'M05B5.4', 'plag-15'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'pqn-44', 'tent-5'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'T01H8.2', 'serr-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'T08G11.4', 'tgs-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'T10B11.2', 'cerk-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'tag-173', 'bckd-1B'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'W04A4.5', 'ints-4'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'W09C5.8', 'cox-4'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'Y105E8A.3', 'slc-30A5'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'Y106G6D.7', 'rbm-12'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'Y18D10A.9', 'ciao-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'Y44E3A.6', 'edc-4'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'Y47H9C.7', 'eif-2Bbeta'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'Y48G1A.4', 'nol-14'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'Y6B3B.5', 'gpap-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'Y73E7A.2', 'aatf-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'B0261.1', 'vep-1'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'B0511.7', 'sut-6'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'C34B2.8', 'ndua-13'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'D2030.4', 'ndub-7'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'F31C3.3', 'fmp-27'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'F59C6.5', 'ndub-10'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'Y63D3A.7', 'ndua-2'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'Y65B4A.6', 'eif-4A3'))
+xiao_ts4 <- xiao_ts4 %>%
+  mutate(across('gene', str_replace, 'ZK858.7', 'trmt-6'))
+```
+
+```{r}
+xiao_ts4_WBID <- merge(allWBgeneIDs, xiao_ts4, by = "gene")
+```
+
+```{r}
+# Only keep genes where their loss results in defect observed in more than one embryo
+xiao_ts4_WBID_defect <- subset(xiao_ts4_WBID, cell_cycle_length == "x" | division_asynchrony == "x" | division_asymmetry == "x" | CND.1_expression == "x" | division_angle == "x" | relative_cell_position == "x")
+```
+
+```{r}
+# 697 genes
+xiao_ts3_proteinCoding <- subset(protein_coding_genes, WB_ID %in% xiao_ts3_lineaged_genes$WB_ID)
+
+# 570 genes
+xiao_ts3_proteinCoding_noTF_noTBP <- subset(proteinCoding_noTF_noRBP, WB_ID %in% xiao_ts3_lineaged_genes$WB_ID)
+
+# 32 genes
+xiao_ts3_TF_noRBP <- subset(putative_TF_no_group1234_RBP, WB_ID %in% xiao_ts3_lineaged_genes$WB_ID)
+
+# 31 genes
+xiao_ts3_group1_RBP_noTF <- subset(updated_group1_RBPs_noTFs, WB_ID %in% xiao_ts3_lineaged_genes$WB_ID)
+
+# 18 genes
+xiao_ts3_group2_RBP_noTF <- subset(updated_group2_RBPs_noTFs, WB_ID %in% xiao_ts3_lineaged_genes$WB_ID)
+
+# 14 genes
+xiao_ts3_group3_RBP <- subset(updated_group3_RBPs, WB_ID %in% xiao_ts3_lineaged_genes$WB_ID)
+
+# 29 genes
+xiao_ts3_group4_RBP_noTF <- subset(updated_group4_RBPs_noTFs, WB_ID %in% xiao_ts3_lineaged_genes$WB_ID)
+```
+
+```{r}
+# 171/697 genes = 24.5%
+xiao_ts4_defect_proteinCoding <- subset(protein_coding_genes, WB_ID %in% xiao_ts4_WBID_defect$WB_ID)
+
+# 126/570 genes = 22.1%
+xiao_ts4_defect_proteinCoding_noTF_noTBP <- subset(proteinCoding_noTF_noRBP, WB_ID %in% xiao_ts4_WBID_defect$WB_ID)
+
+# 8/32 genes = 25.0%
+xiao_ts4_defect_TF_noRBP <- subset(putative_TF_no_group1234_RBP, WB_ID %in% xiao_ts4_WBID_defect$WB_ID)
+
+# 10/31 genes = 32.3%
+xiao_ts4_defect_group1_RBP_noTF <- subset(updated_group1_RBPs_noTFs, WB_ID %in% xiao_ts4_WBID_defect$WB_ID)
+
+# 5/18 genes = 27.8%
+xiao_ts4_defect_group2_RBP_noTF <- subset(updated_group2_RBPs_noTFs, WB_ID %in% xiao_ts4_WBID_defect$WB_ID)
+
+# 3/14 genes = 21.4%
+xiao_ts4_defect_group3_RBP <- subset(updated_group3_RBPs, WB_ID %in% xiao_ts4_WBID_defect$WB_ID)
+
+# 18/29 genes = 62.1%
+xiao_ts4_defect_group4_RBP_noTF <- subset(updated_group4_RBPs_noTFs, WB_ID %in% xiao_ts4_WBID_defect$WB_ID)
+```
+
+```{r}
+# TF
+chisq.test(x=c(8,(32-8)), p=c(0.24533715925,0.75466284074))
+
+# group 1
+chisq.test(x=c(10,(31-10)), p=c(0.24533715925,0.75466284074))
+
+# group 2
+chisq.test(x=c(5,(18-5)), p=c(0.24533715925,0.75466284074))
+
+# group 3
+chisq.test(x=c(3,(14-3)), p=c(0.24533715925,0.75466284074))
+
+# group 4
+chisq.test(x=c(18,(29-18)), p=c(0.24533715925,0.75466284074))
+```
+
+
+### Examine orthologs between C. elegans and C. briggsae from 2025 Large et al.
+```{r}
+ortho_summary <- read.csv(file = 'chris_elegans_briggsae_orthologs_S1.csv')
+```
+
+```{r}
+ortho_summary$orthology <- ifelse(ortho_summary$cel_genes == 1 & ortho_summary$cbr_genes == 1, "1:1", NA)
+ortho_summary$orthology <- ifelse(ortho_summary$cel_genes == 1 & ortho_summary$cbr_genes == 2, "1:2", ortho_summary$orthology)
+ortho_summary$orthology <- ifelse(ortho_summary$cel_genes == 2 & ortho_summary$cbr_genes == 1, "2:1", ortho_summary$orthology)
+ortho_summary$orthology <- ifelse(ortho_summary$cel_genes > 2  & ortho_summary$cbr_genes == 1, "many:1", ortho_summary$orthology)
+ortho_summary$orthology <- ifelse(ortho_summary$cel_genes == 1 & ortho_summary$cbr_genes > 2, "1:many", ortho_summary$orthology)
+ortho_summary$orthology <- ifelse(ortho_summary$cel_genes >= 2 & ortho_summary$cbr_genes >= 2, "many:many", ortho_summary$orthology)
+ortho_summary$orthology <- ifelse(ortho_summary$cel_genes == 0 & ortho_summary$cbr_genes > 0, "private", ortho_summary$orthology)
+ortho_summary$orthology <- ifelse(ortho_summary$cel_genes > 0 & ortho_summary$cbr_genes == 0, "private", ortho_summary$orthology)
+```
+
+```{r}
+oneToOne_ortho <- subset(ortho_summary, orthology == "1:1")
+```
+
+```{r}
+oneToOne_ortho$cel_WBID_only <- sub(",.*", "", oneToOne_ortho$WBGene_names)
+```
+
+```{r}
+ortho_summary_split <- ortho_summary %>%
+    separate_rows(WBGene_names, sep = '\\,')
+
+names(ortho_summary_split)[names(ortho_summary_split) == 'WBGene_names'] <- 'WB_ID'
+
+# Remove white spaces
+ortho_summary_split <- ortho_summary_split %>% 
+  mutate(across(where(is.character), str_trim))
+```
+
+```{r}
+cel_ortho_summary_split <- merge(allWBgeneIDs, ortho_summary_split, by = "WB_ID")
+```
+
+```{r}
+group1_RBP_cel_ortho <- merge(group1_RBP[,-2], cel_ortho_summary_split, by = "WB_ID")
+group2_RBP_cel_ortho <- merge(group2_RBP[,-2], cel_ortho_summary_split, by = "WB_ID")
+group3_RBP_cel_ortho <- merge(group3_RBP[,-2], cel_ortho_summary_split, by = "WB_ID")
+group4_RBP_cel_ortho <- merge(group4_RBP[,-2], cel_ortho_summary_split, by = "WB_ID")
+
+putative_TF_no_group1234_RBP$Group <- 'TF'
+putative_TF_no_group1234_RBP_cel_ortho <- merge(putative_TF_no_group1234_RBP[,-1], cel_ortho_summary_split, by = "WB_ID")
+
+protein_coding_genes$Group <- 'protein_coding'
+protein_coding_cel_ortho <- merge(protein_coding_genes[,-2], cel_ortho_summary_split, by = "WB_ID")
+```
+
+```{r}
+group1234_TF_cel_ortho_long <- rbind(group1_RBP_cel_ortho, group2_RBP_cel_ortho, group3_RBP_cel_ortho, group4_RBP_cel_ortho, putative_TF_no_group1234_RBP_cel_ortho, protein_coding_cel_ortho)
+```
+
+```{r}
+# calculate percentages, put into dataframe
+df <- group1234_TF_cel_ortho_long %>%
+  mutate(orthology = factor(orthology)) %>% mutate(Group = factor(Group)) %>%
+  group_by(Group, orthology) %>%
+  summarize(n = n()) %>%
+  mutate(freq = n / sum(n)) %>%
+  mutate(per = label_percent()(freq))  # from the scales package
+```
+
+```{r}
+df$Group <- factor(df$Group, levels=c("1", "2", "3", "4", "TF", "protein_coding"))
+
+ggplot(df, aes(x = Group, y = freq, fill = orthology)) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_y_continuous(labels = scales::percent_format(), expand = c(0, 0)) +
+  geom_text(aes(label = (round(freq,3))*100), 
+            position = position_fill(vjust = 0.5), size = 3) + 
+  labs(y = "Percentage", fill = "Orthology") +
+  scale_x_discrete("Group", 
+                      breaks=c("1", "2", "3", "4", "TF", "protein_coding"), 
+                      labels=c("Group 1 RBP\n(TF-analogous)", "Group 2 RBP\n(non-sequence-specific)", "Group 3 RBP\n(TF-ambiguous)", "Group 4 RBP\n(housekeeping)", "TF", "All protein-coding")) +
+  theme_classic(base_size = 20) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(axis.title.x=element_blank())
+```
+
+```{r}
+# 1:1 orthologs
+
+# group 1
+chisq.test(x=c(183,(254-183)), p=c(0.555194155,0.444805845))
+# group 2
+chisq.test(x=c(80,(139-80)), p=c(0.555194155,0.444805845))
+# group 3
+chisq.test(x=c(191,(257-191)), p=c(0.555194155,0.444805845))
+# group 4
+chisq.test(x=c(237,(278-237)), p=c(0.555194155,0.444805845))
+# TF
+chisq.test(x=c(406,(700-406)), p=c(0.555194155,0.444805845))
+```
+
+```{r}
+# 1:2 orthologs
+
+# group 1
+chisq.test(x=c(9,(254-9)), p=c(0.02867294,0.97132706))
+# group 2
+chisq.test(x=c(7,(139-7)), p=c(0.02867294,0.97132706))
+# group 3
+chisq.test(x=c(10,(257-10)), p=c(0.02867294,0.97132706))
+# group 4
+chisq.test(x=c(10,(278-10)), p=c(0.02867294,0.97132706))
+# TF
+chisq.test(x=c(32,(700-32)), p=c(0.02867294,0.97132706))
+```
+
+```{r}
+# 1:many orthologs
+
+# group 1
+chisq.test(x=c(0,(254-0)), p=c(0.006255004,0.993744996))
+# group 2
+chisq.test(x=c(4,(139-4)), p=c(0.006255004,0.993744996))
+# group 3
+chisq.test(x=c(4,(257-4)), p=c(0.006255004,0.993744996))
+# group 4
+chisq.test(x=c(3,(278-3)), p=c(0.006255004,0.993744996))
+# TF
+chisq.test(x=c(8,(700-8)), p=c(0.006255004,0.993744996))
+```
+
+```{r}
+# 2:1 orthologs
+
+# group 1
+chisq.test(x=c(13,(254-13)), p=c(0.04523619,0.95476381))
+# group 2
+chisq.test(x=c(17,(139-17)), p=c(0.04523619,0.95476381))
+# group 3
+chisq.test(x=c(9,(257-9)), p=c(0.04523619,0.95476381))
+# group 4
+chisq.test(x=c(8,(278-8)), p=c(0.04523619,0.95476381))
+# TF
+chisq.test(x=c(37,(700-37)), p=c(0.04523619,0.95476381))
+```
+
+```{r}
+# many:1 orthologs
+
+# group 1
+chisq.test(x=c(4,(254-4)), p=c(0.03067454,0.96932546))
+# group 2
+chisq.test(x=c(0,(139-0)), p=c(0.03067454,0.96932546))
+# group 3
+chisq.test(x=c(5,(257-5)), p=c(0.03067454,0.96932546))
+# group 4
+chisq.test(x=c(0,(278-0)), p=c(0.03067454,0.96932546))
+# TF
+chisq.test(x=c(26,(700-26)), p=c(0.03067454,0.96932546))
+```
+
+```{r}
+# many:many orthologs
+
+# group 1
+chisq.test(x=c(17,(254-17)), p=c(0.18169536,0.81830464))
+# group 2
+chisq.test(x=c(14,(139-14)), p=c(0.18169536,0.81830464))
+# group 3
+chisq.test(x=c(15,(257-15)), p=c(0.18169536,0.81830464))
+# group 4
+chisq.test(x=c(5,(278-5)), p=c(0.18169536,0.81830464))
+# TF
+chisq.test(x=c(115,(700-115)), p=c(0.18169536,0.81830464))
+```
+
+```{r}
+# C. elegans private
+
+# group 1
+chisq.test(x=c(19,(254-19)), p=c(0.15227182,0.84772818))
+# group 2
+chisq.test(x=c(6,(139-6)), p=c(0.15227182,0.84772818))
+# group 3
+chisq.test(x=c(17,(257-17)), p=c(0.15227182,0.84772818))
+# group 4
+chisq.test(x=c(12,(278-12)), p=c(0.15227182,0.84772818))
+# TF
+chisq.test(x=c(67,(700-67)), p=c(0.15227182,0.84772818))
+```
+
+
+### Look at human orthologs for the different categories of genes
+```{r}
+# Read in ortholist2 table
+ortholist2_celegans_human_orthologs <- read.csv(file = 'ortholist2_celegans_human_orthologs.csv')
+```
+
+```{r}
+ortholist2_group1_RBP_noTFs <- subset(ortholist2_celegans_human_orthologs, WormBase.ID %in% updated_group1_RBPs_noTFs$WB_ID)
+
+ortholist2_group1_RBP_noTFs_unique <- ortholist2_group1_RBP_noTFs[,1:2]
+ortholist2_group1_RBP_noTFs_unique <- unique(ortholist2_group1_RBP_noTFs_unique)
+
+(194/251)*100
+```
+
+```{r}
+ortholist2_group2_RBP_noTFs <- subset(ortholist2_celegans_human_orthologs, WormBase.ID %in% updated_group2_RBPs_noTFs$WB_ID)
+
+ortholist2_group2_RBP_noTFs_unique <- ortholist2_group2_RBP_noTFs[,1:2]
+ortholist2_group2_RBP_noTFs_unique <- unique(ortholist2_group2_RBP_noTFs_unique)
+
+(91/135)*100
+```
+
+```{r}
+ortholist2_group3_RBP <- subset(ortholist2_celegans_human_orthologs, WormBase.ID %in% updated_group3_RBPs$WB_ID)
+
+ortholist2_group3_RBP_unique <- ortholist2_group3_RBP[,1:2]
+ortholist2_group3_RBP_unique <- unique(ortholist2_group3_RBP_unique)
+
+(129/257)*100
+```
+
+```{r}
+ortholist2_group4_RBP_noTFs <- subset(ortholist2_celegans_human_orthologs, WormBase.ID %in% updated_group4_RBPs_noTFs$WB_ID)
+
+ortholist2_group4_RBP_noTFs_unique <- ortholist2_group4_RBP_noTFs[,1:2]
+ortholist2_group4_RBP_noTFs_unique <- unique(ortholist2_group4_RBP_noTFs_unique)
+
+(259/278)*100
+```
+
+```{r}
+ortholist2_TFs_noRBPs <- subset(ortholist2_celegans_human_orthologs, WormBase.ID %in% putative_TF_no_group1234_RBP$WB_ID)
+
+ortholist2_TFs_noRBPs_unique <- ortholist2_TFs_noRBPs[,1:2]
+ortholist2_TFs_noRBPs_unique <- unique(ortholist2_TFs_noRBPs_unique)
+
+(320/700)*100
+```
+
+```{r}
+ortholist2_allProteinCoding <- subset(ortholist2_celegans_human_orthologs, WormBase.ID %in% protein_coding_genes$WB_ID)
+
+ortholist2_allProteinCoding_unique <- ortholist2_allProteinCoding[,1:2]
+ortholist2_allProteinCoding_unique <- unique(ortholist2_allProteinCoding_unique)
+
+(8143/19984)*100
+```
+
+```{r}
+# TF
+chisq.test(x=c(320,(700-320)), p=c(0.40747598078,0.59252401921))
+
+# group 1
+chisq.test(x=c(194,(251-194)), p=c(0.40747598078,0.59252401921))
+
+# group 2
+chisq.test(x=c(91,(135-91)), p=c(0.40747598078,0.59252401921))
+
+# group 3
+chisq.test(x=c(129,(257-129)), p=c(0.40747598078,0.59252401921))
+
+# group 4
+chisq.test(x=c(259,(278-259)), p=c(0.40747598078,0.59252401921))
+```
+
