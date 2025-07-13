@@ -1,0 +1,703 @@
+---
+title: "hierarchicalClustering_RBP_TF_expression"
+output: html_document
+date: "2025-07-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Hierarchical clustering of 2015 Hashimshony expression for RBPs and TFs
+```{r}
+# import tsv file
+whole_emb <- read.table(file = 'whole.embryo.interval.timecourse.tsv', sep = '\t', header = TRUE)
+
+# rename columns 
+names(whole_emb)[names(whole_emb) == 'X'] <- 'gene'
+names(whole_emb)[names(whole_emb) == 'X1_cell'] <- 'one_cell'
+names(whole_emb)[names(whole_emb) == 'X2_cell'] <- 'two_cell'
+```
+
+```{r}
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F26B1.2', 'hrpk-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y59A8B.10', 'nova-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y54E5A.6', 'dus-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y106G6D.7', 'rbm-12'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C30F12.1', 'rege-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'M01A10.1', 'fubl-4'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'T08B2.5', 'rbm-5'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y65B4A.1', 'cus-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'hrp-1', 'hrpa-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'hrp-2', 'hrpr-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y55F3AM.6', 'lep-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'B0035.12', 'sart-3'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'tiar-3', 'rnp-9'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C08H9.2', 'vgln-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C12D8.1', 'fubl-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C41G7.3', 'mina-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C50B8.1', 'slrp-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'E02H1.2', 'eral-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F11A10.7', 'rbm-34'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F32B4.4', 'phm-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F58B3.7', 'rbm-17'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'K07C5.6', 'sluh-7'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'K08F4.2', 'gtbp-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'zbp-1', 'imph-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'R09B3.2', 'rbm-3.1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'R09B3.3', 'rbm-3.2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'R11A8.7', 'mask-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'T04A8.6', 'nifk-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'W04D2.6', 'rbm-25'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y18D10A.8', 'mxt-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y37D8A.21', 'rbm-7'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y53C12B.2', 'pno-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C05C8.2', 'krr-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C06G4.1', 'hrpk-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C07H6.4', 'sap-140'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C23H3.3', 'ascc-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C30B5.4', 'rbmx-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C36E6.1', 'fubl-3'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C44B7.2', 'hrpl-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C44E4.4', 'ssb-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C50D2.5', 'sftb-6'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'mel-47', 'tofu-6'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'H24K24.4', 'trm-2A'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'H28G03.1', 'hrpa-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'K07H8.10', 'nucl-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'T08B6.5', 'sgnh-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'tag-262', 'rbm-42'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y55F3AM.3', 'rbm-39'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'ZK418.8', 'tofu-7'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'ZK418.9', 'fubl-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C25A1.4', 'sup-46'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'T11G6.8', 'rbm-22'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'B0336.3', 'rbm-26'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C33H5.17', 'zgpa-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C34D10.2', 'unk-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'EEED8.16', 'brap-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F26B1.2', 'hrpk-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y59A8B.10', 'nova-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y54E5A.6', 'dus-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y106G6D.7', 'rbm-12'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C30F12.1', 'rege-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'M01A10.1', 'fubl-4'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'T08B2.5', 'rbm-5'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y65B4A.1', 'cus-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'hrp-1', 'hrpa-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'hrp-2', 'hrpr-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y55F3AM.6', 'lep-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'B0035.12', 'sart-3'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'tiar-3', 'rnp-9'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C08H9.2', 'vgln-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C12D8.1', 'fubl-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C41G7.3', 'mina-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C50B8.1', 'slrp-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'E02H1.2', 'eral-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F11A10.7', 'rbm-34'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F32B4.4', 'phm-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F58B3.7', 'rbm-17'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'K07C5.6', 'sluh-7'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'K08F4.2', 'gtbp-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'zbp-1', 'imph-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'R09B3.2', 'rbm-3.1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'R09B3.3', 'rbm-3.2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'R11A8.7', 'mask-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'T04A8.6', 'nifk-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'W04D2.6', 'rbm-25'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y18D10A.8', 'mxt-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y37D8A.21', 'rbm-7'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y53C12B.2', 'pno-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C05C8.2', 'krr-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C06G4.1', 'hrpk-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C07H6.4', 'sap-140'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C23H3.3', 'ascc-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C30B5.4', 'rbmx-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C36E6.1', 'fubl-3'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C44B7.2', 'hrpl-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C44E4.4', 'ssb-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C50D2.5', 'sftb-6'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'mel-47', 'tofu-6'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'H24K24.4', 'trm-2A'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'H28G03.1', 'hrpa-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'K07H8.10', 'nucl-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'T08B6.5', 'sgnh-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'tag-262', 'rbm-42'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y55F3AM.3', 'rbm-39'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'ZK418.8', 'tofu-7'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'ZK418.9', 'fubl-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C25A1.4', 'sup-46'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y61A9LA.9', 'hpo-39'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'D1081.8', 'cdc-5L'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'D1005.3', 'cebp-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F16H11.4', 'ceh-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F59H6.6', 'ceh-85'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'H32C10.3', 'dhhc-13'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C28C12.8', 'hlh-12'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'ZC416.1', 'madf-9'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'pqn-47', 'myrf-1'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F21A10.2', 'myrf-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F13A2.8', 'nhr-118'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'E03H4.6', 'nhr-174'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F47C10.1', 'nhr-185'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F47C10.8', 'nhr-189'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'K06B4.5', 'nhr-196'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'T07C5.4', 'nhr-215'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'T27B7.5', 'nhr-227'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y32B12B.6', 'nhr-233'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y38E10A.18', 'nhr-234'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'ZK218.6', 'nhr-248'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'ZK6.5', 'nhr-254'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'ZK678.2', 'nhr-255'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'C17A2.1', 'nhr-257'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'H22D14.1', 'nhr-267'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'K06B4.6', 'nhr-268'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'T07C5.2', 'nhr-272'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y71A12C.1', 'nhr-276'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'F16B12.8', 'nhr-281'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'T26E4.16', 'nhr-285'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'W05B5.3', 'nhr-85'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'R13.2', 'npax-3'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'K06B9.5', 'pax-2'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'T26C11.1', 'tbx-41'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'R07B1.1', 'vab-15'))
+whole_emb <- whole_emb %>%
+  mutate(across('gene', str_replace, 'Y57G11C.9', 'melo-1'))
+```
+
+```{r}
+# turn first column into row names
+whole_emb <- whole_emb %>% remove_rownames %>% column_to_rownames(var = "gene")
+```
+
+```{r}
+whole_emb_modified <- whole_emb
+whole_emb_modified <- whole_emb_modified[ , 3:50]
+
+# change the column names such that everything before the _ is removed
+colnames(whole_emb_modified) <- gsub(".*_","", colnames(whole_emb_modified))
+
+# rename first six columns
+names(whole_emb_modified)[names(whole_emb_modified) == '010'] <- '10'
+names(whole_emb_modified)[names(whole_emb_modified) == '020'] <- '20'
+names(whole_emb_modified)[names(whole_emb_modified) == '040'] <- '40'
+names(whole_emb_modified)[names(whole_emb_modified) == '050'] <- '50'
+names(whole_emb_modified)[names(whole_emb_modified) == '060'] <- '60'
+names(whole_emb_modified)[names(whole_emb_modified) == '070'] <- '70'
+```
+
+```{r}
+# to prevent issues downstream with hclust, remove rows where value is the same across all columns...
+keep <- apply(whole_emb_modified, 1, function(x) length(unique(x[!is.na(x)])) != 1)
+whole_emb_modified <- whole_emb_modified[keep, ]
+```
+
+```{r}
+# Turn row names into column
+whole_emb_modified <- setDT(whole_emb_modified, keep.rownames = "gene")
+```
+
+```{r}
+# Create a matrix
+hclust_matrix <- whole_emb_modified %>% 
+  dplyr::select(-gene) %>% 
+  as.matrix()
+
+# Assign rownames
+rownames(hclust_matrix) <- whole_emb_modified$gene
+```
+
+```{r}
+updated_group1234_RBPs_noTF <- rbind(updated_group1_RBPs_noTFs, updated_group2_RBPs_noTFs, updated_group3_RBPs, updated_group4_RBPs_noTFs)
+
+updated_group1234_RBPs_noTF <- updated_group1234_RBPs_noTF[,c("gene", "WB_ID")]
+
+updated_group1234_RBPs_TFs_long <- rbind(updated_group1234_RBPs_noTF, putative_TF_no_group1234_RBP)
+```
+
+```{r}
+putative_TF_no_group1234_RBP_temp <- putative_TF_no_group1234_RBP
+putative_TF_no_group1234_RBP_temp$Group <- 'TF'
+putative_TF_no_group1234_RBP_temp <- putative_TF_no_group1234_RBP_temp[,c("WB_ID", "gene", "Group")]
+
+updated_group1234_RBPs_noTF_v2 <- rbind(updated_group1_RBPs_noTFs, updated_group2_RBPs_noTFs, updated_group3_RBPs, updated_group4_RBPs_noTFs, putative_TF_no_group1234_RBP_temp)
+```
+
+```{r}
+RBPs_TFs_for_clustering <- subset(updated_group1234_RBPs_TFs_long, gene %in% whole_emb_modified$gene)
+```
+
+```{r}
+RBPs_TFs_vector <- RBPs_TFs_for_clustering$gene
+```
+
+```{r}
+# Only include candidate genes in matrix...
+hclust_matrix_RBPs_TFs <- hclust_matrix[RBPs_TFs_vector, ]
+```
+
+```{r}
+hclust_matrix_RBPs_TFs <- hclust_matrix_RBPs_TFs %>% 
+  # Transpose the matrix so genes are as columns
+  t() %>% 
+  # apply scaling to each column of the matrix (genes)
+  scale()
+```
+
+```{r}
+RBPs_TFs.cor <- hclust_matrix_RBPs_TFs %>% 
+  cor(use="pairwise.complete.obs", method = "pearson")
+
+RBPs_TFs.dist <- as.dist(1 - RBPs_TFs.cor)
+```
+
+```{r}
+gene_hclust_RBPs_TFs <- hclust(RBPs_TFs.dist, method = "complete")
+
+# The default `plot()` function can be used to produce a simple dendrogram
+plot(gene_hclust_RBPs_TFs, labels = FALSE)
+abline(h = 10, col = "brown", lwd = 2) # add horizontal line to illustrate cutting dendrogram
+```
+
+```{r}
+# Cut dendrogram into 12 groups 
+RBPs_TFs_cluster12 <- cutree(gene_hclust_RBPs_TFs, k = 12) %>% 
+  # Turn the named vector into a tibble
+  enframe() %>% 
+  # Rename some of the columns
+  rename(gene = name, cluster = value)
+
+head(RBPs_TFs_cluster12)
+```
+
+```{r}
+# Reshape whole_emb_modified into long format
+whole_emb_modified_long <- gather(whole_emb_modified, timept, tpm, 2:49)
+```
+
+```{r}
+#make timept column values numeric
+whole_emb_modified_long$timept <- as.numeric(as.character(whole_emb_modified_long$timept))
+```
+
+```{r}
+whole_emb_modified_RBPs_TFs_long <- merge(whole_emb_modified_long, updated_group1234_RBPs_TFs_long, by = "gene")
+```
+
+```{r}
+whole_emb_modified_RBPs_TFs_long <- whole_emb_modified_RBPs_TFs_long %>% 
+  # for each gene
+  group_by(gene) %>% 
+  # scale the tpm column
+  mutate(tpm_scaled = (tpm - mean(tpm))/sd(tpm))
+```
+
+```{r}
+whole_emb_modified_RBPs_TFs_cluster12 <- whole_emb_modified_RBPs_TFs_long %>% 
+  inner_join(RBPs_TFs_cluster12, by = "gene")
+
+head(whole_emb_modified_RBPs_TFs_cluster12)
+```
+
+```{r}
+table(RBPs_TFs_cluster12$cluster)
+
+prop.table(table(RBPs_TFs_cluster12$cluster)) * 100
+```
+
+```{r}
+median_whole_emb_modified_RBPs_TFs_cluster12 <- whole_emb_modified_RBPs_TFs_cluster12 %>% 
+    group_by(timept, cluster) %>% 
+    summarise(median_val = median(tpm_scaled))
+```
+
+```{r}
+# Cluster 1 = Early 2
+# Cluster 2 = Maternal 2 
+# Cluster 3 = Early 1
+# Cluster 4 = Late 1
+# Cluster 5 = Maternal 1
+# Cluster 6 = Iffy cluster...
+# Cluster 7 = Middle 1
+# Cluster 8 = Late 2
+# Cluster 9 = Iffy cluster...
+# Cluster 10 = Middle 2
+# Cluster 11 = Iffy cluster...
+# Cluster 12 = Iffy cluster...
+median_whole_emb_modified_RBPs_TFs_cluster12 %>%
+    ggplot(aes(timept, median_val)) +
+    geom_line(aes(group = cluster), color = "slategray", size = 1) +
+    facet_wrap(~cluster, ncol = 6) +
+    labs(y = "Median scaled TPM", x = "Stage") +
+    theme_classic(base_size = 20)
+```
+
+```{r}
+# Rename clusters
+cluster1_temp3 <- subset(RBPs_TFs_cluster12, cluster == "1")
+cluster1_temp3$cluster_rename <- 'Early 2'
+
+cluster2_temp3 <- subset(RBPs_TFs_cluster12, cluster == "2")
+cluster2_temp3$cluster_rename <- 'Maternal 2'
+
+cluster3_temp3 <- subset(RBPs_TFs_cluster12, cluster == "3")
+cluster3_temp3$cluster_rename <- 'Early 1'
+
+cluster4_temp3 <- subset(RBPs_TFs_cluster12, cluster == "4")
+cluster4_temp3$cluster_rename <- 'Late 1'
+
+cluster5_temp3 <- subset(RBPs_TFs_cluster12, cluster == "5")
+cluster5_temp3$cluster_rename <- 'Maternal 1'
+
+cluster6_temp3 <- subset(RBPs_TFs_cluster12, cluster == "6")
+cluster6_temp3$cluster_rename <- 'Iffy 1'
+
+cluster7_temp3 <- subset(RBPs_TFs_cluster12, cluster == "7")
+cluster7_temp3$cluster_rename <- 'Middle 1'
+
+cluster8_temp3 <- subset(RBPs_TFs_cluster12, cluster == "8")
+cluster8_temp3$cluster_rename <- 'Late 2'
+
+cluster9_temp3 <- subset(RBPs_TFs_cluster12, cluster == "9")
+cluster9_temp3$cluster_rename <- 'Iffy 2'
+
+cluster10_temp3 <- subset(RBPs_TFs_cluster12, cluster == "10")
+cluster10_temp3$cluster_rename <- 'Middle 2'
+
+cluster11_temp3 <- subset(RBPs_TFs_cluster12, cluster == "11")
+cluster11_temp3$cluster_rename <- 'Iffy 3'
+
+cluster12_temp3 <- subset(RBPs_TFs_cluster12, cluster == "12")
+cluster12_temp3$cluster_rename <- 'Iffy 4'
+
+
+RBPs_TFs_cluster12_renamedClusters <- rbind(cluster1_temp3, cluster2_temp3, cluster3_temp3, cluster4_temp3, cluster5_temp3, cluster6_temp3, cluster7_temp3, cluster8_temp3, cluster9_temp3, cluster10_temp3, cluster11_temp3, cluster12_temp3)
+
+temp_group1_RBP <- subset(RBPs_TFs_cluster12_renamedClusters, gene %in% updated_group1_RBPs_noTFs$gene)
+temp_group1_RBP$category <- 'group1_RBP'
+
+temp_group2_RBP <- subset(RBPs_TFs_cluster12_renamedClusters, gene %in% updated_group2_RBPs_noTFs$gene)
+temp_group2_RBP$category <- 'group2_RBP'
+
+temp_group3_RBP <- subset(RBPs_TFs_cluster12_renamedClusters, gene %in% updated_group3_RBPs$gene)
+temp_group3_RBP$category <- 'group3_RBP'
+
+temp_group4_RBP <- subset(RBPs_TFs_cluster12_renamedClusters, gene %in% updated_group4_RBPs_noTFs$gene)
+temp_group4_RBP$category <- 'group4_RBP'
+
+temp_TF <- subset(RBPs_TFs_cluster12_renamedClusters, gene %in% putative_TF_no_group1234_RBP$gene)
+temp_TF$category <- 'TF'
+
+RBPs_TFs_cluster12_renamedClusters <- rbind(temp_group1_RBP, temp_group2_RBP, temp_group3_RBP, temp_group4_RBP, temp_TF)
+RBPs_TFs_cluster12_renamedClusters$cluster <- NULL
+names(RBPs_TFs_cluster12_renamedClusters)[names(RBPs_TFs_cluster12_renamedClusters) == 'cluster_rename'] <- 'cluster'
+```
+
+```{r}
+RBPs_TFs_cluster12_renamedClusters_noIffyClusters <- subset(RBPs_TFs_cluster12_renamedClusters, cluster == "Early 1" | cluster == "Early 2" | cluster == "Maternal 1" | cluster == "Maternal 2" | cluster == "Middle 1" | cluster == "Middle 2" | cluster == "Late 1" | cluster == "Late 2")
+```
+
+```{r}
+whole_emb_modified_RBPs_TFs_cluster12_renamedClusters_noIffyClusters <- merge(RBPs_TFs_cluster12_renamedClusters_noIffyClusters, whole_emb_modified_RBPs_TFs_cluster12[,1:5], by = "gene")
+
+median_whole_emb_modified_RBPs_TFs_cluster12_renamedClusters_noIffyClusters <- whole_emb_modified_RBPs_TFs_cluster12_renamedClusters_noIffyClusters %>% 
+    group_by(timept, cluster) %>% 
+    summarise(median_val = median(tpm_scaled))
+```
+
+```{r}
+median_whole_emb_modified_RBPs_TFs_cluster12_renamedClusters_noIffyClusters$cluster <- factor(median_whole_emb_modified_RBPs_TFs_cluster12_renamedClusters_noIffyClusters$cluster, levels = c("Maternal 1", "Maternal 2", "Early 1", "Early 2", "Middle 1", "Middle 2", "Late 1", "Late 2"))
+
+median_whole_emb_modified_RBPs_TFs_cluster12_renamedClusters_noIffyClusters %>%
+    ggplot(aes(timept, median_val)) +
+    geom_line(aes(group = cluster), color = "slategray", size = 1) +
+    facet_wrap(~cluster, ncol = 4) +
+    labs(y = "Median scaled TPM", x = "Stage") +
+    theme_classic(base_size = 20)
+```
+
+```{r}
+maternal1_whole_emb_modified_tpmScaled <- subset(whole_emb_modified_RBPs_TFs_cluster12_renamedClusters_noIffyClusters, cluster == "Maternal 1")
+
+single_median_maternal1_whole_emb_modified_tpmScaled <- maternal1_whole_emb_modified_tpmScaled %>% 
+    group_by(timept) %>% 
+    summarise(median_val = median(tpm_scaled))
+
+maternal1_whole_emb_modified_tpmScaled %>%
+    ggplot(aes(x = timept, y = tpm_scaled)) +
+    geom_line(aes(group = gene), alpha = 0.3, size = 0.2, color = "gray") +
+    labs(x = "Embryo stage (min.)", y = "Median scaled\nexpression", color = "Gene") +
+    geom_line(data = single_median_maternal1_whole_emb_modified_tpmScaled, aes(x = timept, y = median_val), size = 1) +
+    guides(color = guide_legend(override.aes = list(alpha=1))) +
+    guides(color = guide_legend(ncol = 3)) +
+    theme_classic(base_size = 20) +
+    theme(legend.position = "none")
+```
+
+```{r}
+maternal2_whole_emb_modified_tpmScaled <- subset(whole_emb_modified_RBPs_TFs_cluster12_renamedClusters_noIffyClusters, cluster == "Maternal 2")
+
+single_median_maternal2_whole_emb_modified_tpmScaled <- maternal2_whole_emb_modified_tpmScaled %>% 
+    group_by(timept) %>% 
+    summarise(median_val = median(tpm_scaled))
+
+maternal2_whole_emb_modified_tpmScaled %>%
+    ggplot(aes(x = timept, y = tpm_scaled)) +
+    geom_line(aes(group = gene), alpha = 0.3, size = 0.2, color = "gray") +
+    labs(x = "Embryo stage (min.)", y = "Median scaled\nexpression", color = "Gene") +
+    geom_line(data = single_median_maternal2_whole_emb_modified_tpmScaled, aes(x = timept, y = median_val), size = 1) +
+    guides(color = guide_legend(override.aes = list(alpha=1))) +
+    guides(color = guide_legend(ncol = 3)) +
+    theme_classic(base_size = 20) +
+    theme(legend.position = "none")
+```
+
+```{r}
+early1_whole_emb_modified_tpmScaled <- subset(whole_emb_modified_RBPs_TFs_cluster12_renamedClusters_noIffyClusters, cluster == "Early 1")
+
+single_median_early1_whole_emb_modified_tpmScaled <- early1_whole_emb_modified_tpmScaled %>% 
+    group_by(timept) %>% 
+    summarise(median_val = median(tpm_scaled))
+
+early1_whole_emb_modified_tpmScaled %>%
+    ggplot(aes(x = timept, y = tpm_scaled)) +
+    geom_line(aes(group = gene), alpha = 0.3, size = 0.2, color = "gray") +
+    labs(x = "Embryo stage (min.)", y = "Median scaled\nexpression", color = "Gene") +
+    geom_line(data = single_median_early1_whole_emb_modified_tpmScaled, aes(x = timept, y = median_val), size = 1) +
+    guides(color = guide_legend(override.aes = list(alpha=1))) +
+    guides(color = guide_legend(ncol = 3)) +
+    theme_classic(base_size = 20) +
+    theme(legend.position = "none")
+```
+
+```{r}
+early2_whole_emb_modified_tpmScaled <- subset(whole_emb_modified_RBPs_TFs_cluster12_renamedClusters_noIffyClusters, cluster == "Early 2")
+
+single_median_early2_whole_emb_modified_tpmScaled <- early2_whole_emb_modified_tpmScaled %>% 
+    group_by(timept) %>% 
+    summarise(median_val = median(tpm_scaled))
+
+early2_whole_emb_modified_tpmScaled %>%
+    ggplot(aes(x = timept, y = tpm_scaled)) +
+    geom_line(aes(group = gene), alpha = 0.3, size = 0.2, color = "gray") +
+    labs(x = "Embryo stage (min.)", y = "Median scaled\nexpression", color = "Gene") +
+    geom_line(data = single_median_early2_whole_emb_modified_tpmScaled, aes(x = timept, y = median_val), size = 1) +
+    guides(color = guide_legend(override.aes = list(alpha=1))) +
+    guides(color = guide_legend(ncol = 3)) +
+    theme_classic(base_size = 20) +
+    theme(legend.position = "none")
+```
+
+```{r}
+middle1_whole_emb_modified_tpmScaled <- subset(whole_emb_modified_RBPs_TFs_cluster12_renamedClusters_noIffyClusters, cluster == "Middle 1")
+
+single_median_middle1_whole_emb_modified_tpmScaled <- middle1_whole_emb_modified_tpmScaled %>% 
+    group_by(timept) %>% 
+    summarise(median_val = median(tpm_scaled))
+
+middle1_whole_emb_modified_tpmScaled %>%
+    ggplot(aes(x = timept, y = tpm_scaled)) +
+    geom_line(aes(group = gene), alpha = 0.3, size = 0.2, color = "gray") +
+    labs(x = "Embryo stage (min.)", y = "Median scaled\nexpression", color = "Gene") +
+    geom_line(data = single_median_middle1_whole_emb_modified_tpmScaled, aes(x = timept, y = median_val), size = 1) +
+    guides(color = guide_legend(override.aes = list(alpha=1))) +
+    guides(color = guide_legend(ncol = 3)) +
+    theme_classic(base_size = 20) +
+    theme(legend.position = "none")
+```
+
+```{r}
+middle2_whole_emb_modified_tpmScaled <- subset(whole_emb_modified_RBPs_TFs_cluster12_renamedClusters_noIffyClusters, cluster == "Middle 2")
+
+single_median_middle2_whole_emb_modified_tpmScaled <- middle2_whole_emb_modified_tpmScaled %>% 
+    group_by(timept) %>% 
+    summarise(median_val = median(tpm_scaled))
+
+middle2_whole_emb_modified_tpmScaled %>%
+    ggplot(aes(x = timept, y = tpm_scaled)) +
+    geom_line(aes(group = gene), alpha = 0.3, size = 0.2, color = "gray") +
+    labs(x = "Embryo stage (min.)", y = "Median scaled\nexpression", color = "Gene") +
+    geom_line(data = single_median_middle2_whole_emb_modified_tpmScaled, aes(x = timept, y = median_val), size = 1) +
+    guides(color = guide_legend(override.aes = list(alpha=1))) +
+    guides(color = guide_legend(ncol = 3)) +
+    theme_classic(base_size = 20) +
+    theme(legend.position = "none")
+```
+
+```{r}
+late1_whole_emb_modified_tpmScaled <- subset(whole_emb_modified_RBPs_TFs_cluster12_renamedClusters_noIffyClusters, cluster == "Late 1")
+
+single_median_late1_whole_emb_modified_tpmScaled <- late1_whole_emb_modified_tpmScaled %>% 
+    group_by(timept) %>% 
+    summarise(median_val = median(tpm_scaled))
+
+late1_whole_emb_modified_tpmScaled %>%
+    ggplot(aes(x = timept, y = tpm_scaled)) +
+    geom_line(aes(group = gene), alpha = 0.3, size = 0.2, color = "gray") +
+    labs(x = "Embryo stage (min.)", y = "Median scaled\nexpression", color = "Gene") +
+    geom_line(data = single_median_late1_whole_emb_modified_tpmScaled, aes(x = timept, y = median_val), size = 1) +
+    guides(color = guide_legend(override.aes = list(alpha=1))) +
+    guides(color = guide_legend(ncol = 3)) +
+    theme_classic(base_size = 20) +
+    theme(legend.position = "none")
+```
+
+```{r}
+late2_whole_emb_modified_tpmScaled <- subset(whole_emb_modified_RBPs_TFs_cluster12_renamedClusters_noIffyClusters, cluster == "Late 2")
+
+single_median_late2_whole_emb_modified_tpmScaled <- late2_whole_emb_modified_tpmScaled %>% 
+    group_by(timept) %>% 
+    summarise(median_val = median(tpm_scaled))
+
+late2_whole_emb_modified_tpmScaled %>%
+    ggplot(aes(x = timept, y = tpm_scaled)) +
+    geom_line(aes(group = gene), alpha = 0.3, size = 0.2, color = "gray") +
+    labs(x = "Embryo stage (min.)", y = "Median scaled\nexpression", color = "Gene") +
+    geom_line(data = single_median_late2_whole_emb_modified_tpmScaled, aes(x = timept, y = median_val), size = 1) +
+    guides(color = guide_legend(override.aes = list(alpha=1))) +
+    guides(color = guide_legend(ncol = 3)) +
+    theme_classic(base_size = 20) +
+    theme(legend.position = "none")
+```
+
